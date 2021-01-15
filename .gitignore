@@ -1,8 +1,4 @@
-# Drafts are unfinished business
-draft*.*
+draft*
 test*
-# Dataset (No need to push it)
 /VisDrone2019
-/data
-# VSCode cache
 __pycache__
