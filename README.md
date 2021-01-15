@@ -21,11 +21,11 @@ We will consider the first task in the repository (Object Detection in Images).
 
 Note that Crowd counting task isn't compatible for training a YOLO algorithm.
 
-|     Train    | Validation |     Test     |
-|:------------:|:----------:|:------------:|
-| 6 471 images | 548 images | 1 580 images |
-
-Images are annotated as follows :
+|              |     Train    | Validation |     Test     |
+|:------------:|:------------:|:----------:|:------------:|
+|   **Count**  |   *6 471*    |    *548*   |   *1 580*    |
+| **Max width**|   *2 000*    |   *1 920*  |   *1 920*    |
+|**Max height**|   *1 500*    |   *1080*   |   *1 080*    |
 
 ```
 <bbox_left>,<bbox_top>,<bbox_width>,<bbox_height>,<score>,<object_category>,<truncation>,<occlusion>
