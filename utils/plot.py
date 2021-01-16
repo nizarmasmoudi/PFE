@@ -14,9 +14,19 @@ def show_img(img_path, draw_bbox=False, figsize=(20, 20)):
     image = plt.imread(img_path)
     plt.figure(figsize=figsize)
     plt.imshow(image)
+    # Cleaning matplotlib figure
+    plt.tick_params(which='both', 
+                    bottom = False, top = False, left = False, right = False,
+                    labelbottom = False, labeltop = False, labelleft = False, labelright = False)
+    for spine in plt.gca().spines.values():
+        spine.set_visible(False)
     # Drawing bounding boxes
     if draw_bbox:
-        annotations = pd.read_csv(img_path.replace('images', 'annotations').replace('.jpg', '.txt'), header = None)
+        try:
+            annotations = pd.read_csv(img_path.replace('images', 'annotations').replace('.jpg', '.txt'), header = None)
+        except:
+            plt.show()
+            return
         annotations = annotations[annotations[5].isin([1, 2])]
         annotations = annotations.reset_index().drop(columns = ['index'])
         for i in range(len(annotations)):
@@ -28,10 +38,9 @@ def show_img(img_path, draw_bbox=False, figsize=(20, 20)):
                                     edgecolor = 'r', 
                                     facecolor = 'none')
             plt.gca().add_patch(box)
-    # Cleaning matplotlib figure
-    plt.tick_params(which='both', 
-                    bottom = False, top = False, left = False, right = False,
-                    labelbottom = False, labeltop = False, labelleft = False, labelright = False)
-    for spine in plt.gca().spines.values():
-        spine.set_visible(False)
+    
+    # ! DELETE ME 
+    # height, width = image.shape[:2]
+    # plt.hlines(height//2, 0, width, colors='white')
+    # plt.vlines(width//2, 0, height, colors='white')
     plt.show()

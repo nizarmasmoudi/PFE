@@ -9,10 +9,9 @@ import matplotlib.pyplot as plt
 def format_darknet_annotation(annotation_path, output_folder):
     annotation = pd.read_csv(annotation_path, header=None).values
     for current in annotation:
-        with open(output_folder + '/{}'.format(annotation_path.split('/')[-1]), 'w+') as out:
-            out.write('')
+        open(output_folder + '/{}'.format(annotation_path.split('/')[-1]), 'w+').close()
         image = plt.imread(annotation_path.replace('annotations', 'images').replace('.txt', '.jpg'))
-        bbox_left, bbox_top, bbox_width, bbox_height, _1, obj_cat, _2, _3 = current[:8]
+        bbox_left, bbox_top, bbox_width, bbox_height, _, obj_cat, _, _ = current[:8]
         x_center = (bbox_left + bbox_width/2) / image.shape[1]
         y_center = (bbox_top + bbox_height/2) / image.shape[0]
         width = bbox_width / image.shape[1]
