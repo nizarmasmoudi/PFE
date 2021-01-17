@@ -97,5 +97,5 @@ Another alternative is to train using [Tensorflow](https://github.com/SoloSynth1
 
 In case of need, here's the annotation format required:
 ```
-    <img_path> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> ...
+    <img_path> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> ...
 ```
