@@ -39,8 +39,4 @@ def show_img(img_path, draw_bbox=False, figsize=(20, 20)):
                                     facecolor = 'none')
             plt.gca().add_patch(box)
     
-    # ! DELETE ME 
-    # height, width = image.shape[:2]
-    # plt.hlines(height//2, 0, width, colors='white')
-    # plt.vlines(width//2, 0, height, colors='white')
     plt.show()
