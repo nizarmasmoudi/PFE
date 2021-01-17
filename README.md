@@ -55,7 +55,8 @@ VisDrone2019
         -s {train,test,validation}, --subset {train,test,validation}
                 specify which dataset subset to process
         -o OUTPUT, --output OUTPUT
-                specify the output folder of images and annotations. Two sub-folders will be automatically created (images and annotations)
+                specify the output folder of images and annotations. 
+                Two sub-folders will be automatically created (images and annotations)
     ```
 - `clean_negatives.py` (removes negative samples in case they are causing a problem)
 
