@@ -1,81 +1,100 @@
-<h1 align="center">Crowd Counting and Monitoring</h1>
+<h1 align='center'>Real-time Video Traffic Analysis for Crowd Control in post-COVID-19 Public Events</h1>
 
-## Tasks
-- [x] Format annotations
-    - [x] Format annotations to fit Tensorflow implementation requirements
-    ```
-    python format --subset [train, test, validation] --output path/to/output/file.txt --format tf
-    ```
-    - [x] Format annotations to fit Darknet framework requirements (*this one takes a while to run)
-    ```
-    python format --output path/to/data/folder --format darknet
-    ```
-- [ ] Train a YOLOv4 model on custom dataset (using Darknet or Tensorflow)
-- [ ] Crowd density entimation (K-Means, DBScan, ...)
-- [ ] ...
+## Dataset
+Currently I am working with [VisDrone2019](https://github.com/VisDrone/VisDrone-Dataset) dataset. Only the first task in the repository will be considered (Object Detection in Images).
 
-## Datasets
-- ### [VisDrone](https://github.com/VisDrone/VisDrone-Dataset)
-
-We will consider the first task in the repository (Object Detection in Images).
-
-Note that Crowd counting task isn't compatible for training a YOLO algorithm.
-
+Here's a quick summary of the dataset :
 |              |     Train    | Validation |     Test     |
 |:------------:|:------------:|:----------:|:------------:|
 |   **Count**  |   *6 471*    |    *548*   |   *1 580*    |
 | **Max width**|   *2 000*    |   *1 920*  |   *1 920*    |
 |**Max height**|   *1 500*    |   *1080*   |   *1 080*    |
 
+Annotation are represented as follows :
 ```
-<bbox_left>,<bbox_top>,<bbox_width>,<bbox_height>,<score>,<object_category>,<truncation>,<occlusion>
+    <bbox_left>,<bbox_top>,<bbox_width>,<bbox_height>,<score>,<object_category>,<truncation>,<occlusion>
 ```
+Since people are the only subject of interest, only labels `1` and `2` will be considered (pedestrian, people)
 
-There are multiple object categories. However, we will only consider labels [1, 2] = [Pedestrian, People]
-
-Note: VisDrone2019 isn't visible in this github repository for memory usage reasons. However, here's the structure of the folder:
+For scripts to work, it is highly advised to strcuture data folder in such manner:
 ```
-|- VisDrone2019
-|    |- train
-|    |    |- images
-|    |    |    |- 0000002_00005_d_0000014.jpg
-|    |    |    |- ...
-|    |    |- annotations
-|    |    |    |- 0000002_00005_d_0000014.txt
-|    |    |    |- ...
-|    |- validation
-|    |    |- images
-|    |    |    |- 0000001_02999_d_0000005.jpg
-|    |    |    |- ...
-|    |    |- annotations
-|    |    |    |- 0000001_02999_d_0000005.txt
-|    |    |    |- ...
-|    |- test
-|    |    |- images
-|    |    |    |- 0000006_00159_d_0000001.jpg
-|    |    |    |- ...
-|    |    |- annotations
-|    |    |    |- 0000006_00159_d_0000001.txt
-|    |    |    |- ...
+VisDrone2019
+├───test
+│   ├───annotations
+│   └───images
+├───train
+│   ├───annotations
+│   └───images
+└───validation
+    ├───annotations
+    └───images
 ```
 
-## YOLO Model
-- ### [YOLOv4 using Tensorflow](https://github.com/SoloSynth1/tensorflow-yolov4)
+*Note : The dataset folder isn't visible in this repository for size issues. Please click on the link above to download it*
 
-This repository requires images to be annotated as follows:
+## Scripts
+- `generate.py` (generates dataset according to a certain format)
 
-```
-<img_path> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> ...
-```
+    ```
+    optional arguments:
+        -h, --help
+                show this help message and exit
+        -s {train,test,validation}, --subset {train,test,validation}
+                specify which dataset subset to process (specific to tf format)
+        -o OUTPUT, --output OUTPUT
+                specify path to the output file/folder depending on the specified format
+        -f {tf,darknet}, --format {tf,darknet}
+                specify desired format (tf or darknet)
+    ```
+- `split_images.py` (splits images along with their annotations to reduce network size when training)
 
-- ### [Darknet Framework](https://github.com/AlexeyAB/darknet)
+    ```
+    optional arguments:
+        -h, --help
+                show this help message and exit
+        -s {train,test,validation}, --subset {train,test,validation}
+                specify which dataset subset to process
+        -o OUTPUT, --output OUTPUT
+                specify the output folder of images and annotations. Two sub-folders will be automatically created (images and annotations)
+    ```
+- `clean_negatives.py` (removes negative samples in case they are causing a problem)
 
-[yolov4.weights](https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights) is a file containing pre-trained weights for transfer learning.
+    ```
+    optional arguments:
+        -h, --help
+                show this help message and exit
+        -f FOLDER, --folder FOLDER
+                main folder containing image folder and annotation folder
+        -s, --summary
+                Print summary at the end of the script
+        -l LOG, --log LOG
+                Log deleted images in a log file
+    ```
+
+## Object Detection Algorithm
+I am working on training a [YOLOv4](https://arxiv.org/abs/2004.10934) model using [Darknet](https://github.com/AlexeyAB/darknet) framework.
 
 This framework requires images to be annotated as follows:
-
 ```
-<object_class> <x_center> <y_center> <width> <height>
+    <object_class> <x_center> <y_center> <width> <height>
 ```
 
-All values are relative the width and height of the image.
+Dataset must be organised in such manner:
+```
+data
+│   obj.data
+│   obj.names
+│   train.txt
+│   valid.txt
+│
+└───obj
+```
+
+*Note : All values are relative to the width and height of the image (between 0 and 1)*
+
+Another alternative is to train using [Tensorflow](https://github.com/SoloSynth1/tensorflow-yolov4). It's not advised. However, it might come handy later when deploying the model (Detect people using tensorflow implemented YOLOv4 and Darknet generated weights file).
+
+In case of need, here's the annotation format required:
+```
+    <img_path> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> ...
+```
