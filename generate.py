@@ -96,7 +96,7 @@ def main():
     description = 'This script formats image annotations to fit a certain format. Note that this script is specific to VisDrone2019 dataset.'
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('-a', '--subset', help='specify which dataset subset to process (specific to tf format)', choices=['train', 'test', 'validation'])
+    parser.add_argument('-s', '--subset', help='specify which dataset subset to process (specific to tf format)', choices=['train', 'test', 'validation'])
     parser.add_argument('-o', '--output', help='specify path to the output file/folder depending on the specified format', required=True)
     parser.add_argument('-f', '--format', help='specify desired format (tf or darknet)', required=True, choices=['tf', 'darknet'])
     args = parser.parse_args()

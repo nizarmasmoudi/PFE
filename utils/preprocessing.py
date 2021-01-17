@@ -3,8 +3,9 @@ import pandas as pd
 import os
 from pprint import pprint
 
-def split_image(image, overlap=0, plot=False, save_output=True):
+def split_image(image, overlap=0, plot=False, save_output=''):
     img = plt.imread(image)
+    img_name = image.replace('\\', '/').split('/')[-1].split('.')[0]
     width, height = img.shape[:2]
     pieces = [
         img[:width//2 + overlap, :height//2 + overlap, :], # Top left 
@@ -36,10 +37,11 @@ def split_image(image, overlap=0, plot=False, save_output=True):
         plt.show()
     if save_output:
         for i, piece in enumerate(pieces):
-            plt.imsave('./draft/test_image_{}.jpg'.format(i), piece)
+            plt.imsave(save_output + '/' + img_name + '_{}.jpg'.format(i), piece)
                 
-def split_annotation(annotation_file, overlap=0, save_output=True):
+def split_annotation(annotation_file, overlap=0, save_output=''):
     height, width = plt.imread(annotation_file.replace('annotations', 'images').replace('txt', 'jpg')).shape[:2]
+    img_name = annotation_file.replace('\\', '/').split('/')[-1].split('.')[0]
     annotations = pd.read_csv(annotation_file, header=None)
     annotations = annotations[annotations[5].isin([1, 2])]
     bottom_right = []
@@ -47,16 +49,16 @@ def split_annotation(annotation_file, overlap=0, save_output=True):
     bottom_left = []
     top_left = []
     for annotation in annotations.values:
-        bbox_left, bbox_top, bbox_width, bbox_height, _, _, _, _ = annotation
+        bbox_left, bbox_top, bbox_width, bbox_height, _, _, _, _ = annotation[:8]
         center = (bbox_left + bbox_width//2, bbox_top + bbox_height//2)
-        if center[0] > width//2 and center[1] > height//2:
+        if center[0] > (width//2 - overlap) and center[1] > (height//2 - overlap):
             bottom_right.append([max(bbox_left - (width//2 - overlap), 0), max(bbox_top - (height//2 - overlap), 0)] + list(annotation[2:]))
-        elif center[0] > width//2 and center[1] < height//2:
+        if center[0] > (width//2 - overlap) and center[1] < (height//2 + overlap):
             top_right.append([max(bbox_left - (width//2 - overlap), 0)] + list(annotation[1:]))
-        elif center[0] < width//2 and center[1] > height//2:
+        if center[0] < (width//2 + overlap) and center[1] > (height//2 - overlap):
             bottom_left.append([bbox_left, max(bbox_top - (height//2 - overlap), 0)] + list(annotation[2:]))
-        elif center[0] < width//2 and center[1] < height//2:
+        if center[0] < (width//2 + overlap) and center[1] < (height//2 + overlap):
             top_left.append(list(annotation))
     if save_output:
         for i, split in enumerate([top_left, bottom_left, top_right, bottom_right]):
-            pd.DataFrame(split).to_csv('./draft/test_image_{}.txt'.format(i), header=False, index=False)
+            pd.DataFrame(split).to_csv(save_output + '/' + img_name + '_{}.txt'.format(i), header=False, index=False)
