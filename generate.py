@@ -110,7 +110,6 @@ def main():
             annotation_folder = env.TRAIN_PATH_ + 'annotations' if args.subset == 'train' else (env.TEST_PATH_ + 'annotations' if args.subset == 'test' else env.VALIDATION_PATH_ + 'annotations')
             format_tf(annotation_folder, output)
     elif args.format == 'darknet':
-        # print('Not implemented yet. Please do it you lazy beautiful cunt.')
         format_darknet(output)
 
 
