@@ -8,7 +8,7 @@ PAUSE
 python split_images.py --subset test --output VisDrone2019_/test
 ECHO Splitting images and annotations (validation)
 PAUSE
-python split_images.py --subset validation --output VisDrone2019_/evaluation
+python split_images.py --subset validation --output VisDrone2019_/validation
 :: Cleaning dataset
 ECHO Cleaning dataset (train)
 PAUSE
