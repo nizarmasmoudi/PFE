@@ -28,7 +28,7 @@ def main():
                 img = plt.imread(image)
             except:
                 continue
-            if img.shape in [(1500, 2000, 3), (1080, 1920, 3)]:
+            if img.shape in [(1020, 770, 3), (560, 980, 3)]:
                 os.remove(image)
                 os.remove(image.replace('images', 'annotations').replace('.jpg', '.txt'))
                 large_files.append(image)
