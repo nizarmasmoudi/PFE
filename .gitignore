@@ -1,6 +1,7 @@
 draft*
 test*
 /VisDrone2019
+/data*
 __pycache__
 *.jpg
 *.png
