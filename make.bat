@@ -12,20 +12,20 @@ python split_images.py --subset validation --output VisDrone2019_/validation
 :: Cleaning dataset
 ECHO Cleaning dataset (train)
 PAUSE
-python clean --folder ./VisDrone2019_/train --summary --negatives --large --log log_train.txt
+python clean.py --folder ./VisDrone2019_/train --summary --negatives --large --log log_train.txt
 ECHO Cleaning dataset (validation)
 PAUSE
-python clean --folder ./VisDrone2019_/validation --summary --negatives --large --log log_validation.txt
+python clean.py --folder ./VisDrone2019_/validation --summary --negatives --large --log log_validation.txt
 ECHO Cleaning dataset (test)
 PAUSE
-python clean --folder ./VisDrone2019_/test --summary --negatives --large --log log_test.txt
+python clean.py --folder ./VisDrone2019_/test --summary --negatives --large --log log_test.txt
 :: Making darknet dataset
 ECHO Making darknet dataset (train)
 PAUSE
-python generate --subset train --output ./data --format darknet
+python generate.py --subset train --output ./data --format darknet
 ECHO Making darknet dataset (validation)
 PAUSE
-python generate --subset validation --output ./data --format darknet
+python generate.py --subset validation --output ./data --format darknet
 ECHO Making darknet dataset (test)
 PAUSE
-python generate --subset test --output ./data --format darknet
+python generate.py --subset test --output ./data --format darknet
