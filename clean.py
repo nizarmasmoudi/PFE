@@ -24,7 +24,10 @@ def main():
     if args.large:
         large_files = []
         for image in [file_.replace('annotations', 'images').replace('.txt', '.jpg') for file_ in annot_files]:
-            img = plt.imread(image)
+            try:
+                img = plt.imread(image)
+            except:
+                continue
             if img.shape in [(1500, 2000, 3), (1080, 1920, 3)]:
                 os.remove(image)
                 os.remove(image.replace('images', 'annotations').replace('.jpg', '.txt'))
