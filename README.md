@@ -33,43 +33,57 @@ VisDrone2019
 *Note : The dataset folder isn't visible in this repository for size issues. Please click on the link above to download it*
 
 ## Scripts
-- `generate.py` (generates dataset according to a certain format)
+- `generate.py` (generates dataset according to darknet format)
 
     ```
     optional arguments:
-        -h, --help
-                show this help message and exit
-        -s {train,test,validation}, --subset {train,test,validation}
-                specify which dataset subset to process (specific to tf format)
+        -h, --help            show this help message and exit
+        -d DATASET, --dataset DATASET
+                                Path to dataset folder
         -o OUTPUT, --output OUTPUT
-                specify path to the output file/folder depending on the specified format
-        -f {tf,darknet}, --format {tf,darknet}
-                specify desired format (tf or darknet)
-    ```
-- `split_images.py` (splits images along with their annotations to reduce network size when training)
+                                Path to output folder
+- `split.py` (splits images along with their annotations to reduce network size when training)
 
     ```
     optional arguments:
-        -h, --help
-                show this help message and exit
-        -s {train,test,validation}, --subset {train,test,validation}
-                specify which dataset subset to process
-        -o OUTPUT, --output OUTPUT
-                specify the output folder of images and annotations. 
-                Two sub-folders will be automatically created (images and annotations)
-    ```
-- `clean_negatives.py` (removes negative samples in case they are causing a problem)
-
-    ```
-    optional arguments:
-        -h, --help
-                show this help message and exit
+        -h, --help            show this help message and exit
         -f FOLDER, --folder FOLDER
-                main folder containing image folder and annotation folder
-        -s, --summary
-                Print summary at the end of the script
-        -l LOG, --log LOG
-                Log deleted images in a log file
+                                Path to parent folder (should contain image and annotation folder)
+        -v OVERLAP, --overlap OVERLAP
+                                Splitting overlap
+        -o OUTPUT, --output OUTPUT
+                                Output parent folder
+    ```
+- `clean.py` (removes negative samples and/or large images)
+
+    ```
+    optional arguments:
+        -h, --help            show this help message and exit
+        -f FOLDER, --folder FOLDER
+                                Path to parent folder (should contain image and annotation folder)
+        -n, --negatives       Delete negative samples
+        -l, --large           Delete large images
+        -t THRESHOLD, --threshold THRESHOLD
+                                Threshold of width/heigth for deletion
+        -g, --log             Log deleted files
+    ```
+- `display.py` (displays image with bounding boxes)
+
+    ```
+    optional arguments:
+        -h, --help            show this help message and exit
+        -i IMAGE, --image IMAGE
+                                Path to image
+    ```
+- `annotate.py` (re-creates a set of images adding bounding boxes)
+
+    ```
+    optional arguments:
+        -h, --help            show this help message and exit
+        -f FOLDER, --folder FOLDER
+                                Path to parent folder (should contain image and annotation folder)
+        -o OUTPUT, --output OUTPUT
+                                Output parent folder
     ```
 
 ## Object Detection Algorithm
