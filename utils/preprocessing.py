@@ -1,49 +1,37 @@
-import matplotlib.pyplot as plt
+import cv2
 import pandas as pd
 import os
-from pprint import pprint
+import numpy as np
 
-def split_image(image, overlap=0, plot=False, save_output=''):
-    img = plt.imread(image)
-    img_name = image.replace('\\', '/').split('/')[-1].split('.')[0]
-    width, height = img.shape[:2]
+def split_image(img_path, overlap=0, show=False, save_output=None):
+    img = cv2.imread(img_path)
+    height, width = img.shape[:2]
+    title = img_path.split('/')[-1].split('.')[0]
     pieces = [
-        img[:width//2 + overlap, :height//2 + overlap, :], # Top left 
-        img[width//2 - overlap:, :height//2 + overlap, :], # Bottom left
-        img[:width//2 + overlap, height//2 - overlap:, :], # Top right
-        img[width//2 - overlap:, height//2 - overlap:, :]  # Bottom right
+        img[:height//2 + overlap, :width//2 + overlap, :], # Top left 
+        img[height//2 - overlap:, :width//2 + overlap, :], # Bottom left
+        img[:height//2 + overlap, width//2 - overlap:, :], # Top right
+        img[height//2 - overlap:, width//2 - overlap:, :]  # Bottom right
     ]
-    
-    if plot:
-        fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(3, 3)
-        ax1.imshow(pieces[0])
-        ax1.set_title('Top left {}'.format(pieces[0].shape), size = 7, alpha = .8)
-        ax7.imshow(pieces[1])
-        ax7.set_title('Bottom left {}'.format(pieces[1].shape), size = 7, alpha = .8)
-        ax3.imshow(pieces[2])
-        ax3.set_title('Top right {}'.format(pieces[2].shape), size = 7, alpha = .8)
-        ax9.imshow(pieces[3])
-        ax9.set_title('Bottom right {}'.format(pieces[3].shape), size = 7, alpha = .8)
-        ax5.imshow(img)
-        ax5.set_title('Full image {}'.format(img.shape), size = 7, alpha = .8)
-        for ax in [ax2, ax4, ax6, ax8]: ax.remove()
-        for ax in [ax1, ax3, ax5, ax7, ax9]:
-            for spine in ax.spines.values():
-                spine.set_visible(False)
-            ax.tick_params(which='both', 
-                        bottom = False, top = False, left = False, right = False, 
-                        labelbottom = False, labeltop = False, labelleft = False, labelright = False)
-        fig.set_size_inches(18.5, 10.5)
-        plt.show()
+    if show:
+        window_titles = ['Top left piece', 'Bottom left piece', 'Top right piece', 'Bottom right piece']
+        print('Original shape {}, split into 4 pieces of equal shapes {}'.format((height, width), (height//2 + overlap, width//2 + overlap)))
+        for i, piece in enumerate(pieces):
+            cv2.namedWindow(window_titles[i])
+            cv2.moveWindow(window_titles[i], 40 if i<2 else 40+overlap+width//2, 30 if i%2==0 else 30+overlap+height//2)
+            cv2.imshow(window_titles[i], piece)
+            cv2.waitKey(0)
     if save_output:
         for i, piece in enumerate(pieces):
-            plt.imsave(save_output + '/' + img_name + '_{}.jpg'.format(i), piece)
-                
-def split_annotation(annotation_file, overlap=0, save_output=''):
-    height, width = plt.imread(annotation_file.replace('annotations', 'images').replace('txt', 'jpg')).shape[:2]
-    img_name = annotation_file.replace('\\', '/').split('/')[-1].split('.')[0]
-    annotations = pd.read_csv(annotation_file, header=None)
+            cv2.imwrite(save_output + '/' + title + '_' + str(i+1) + '.jpg', piece)
+
+def split_annotation(ann_path, overlap=0, save_output=None):
+    img_path = ann_path.replace('annotations', 'images').replace('txt', 'jpg')
+    height, width = cv2.imread(img_path).shape[:2]
+    title = img_path.split('/')[-1].split('.')[0]
+    annotations = pd.read_csv(ann_path, header=None)
     annotations = annotations[annotations[5].isin([1, 2])]
+    
     bottom_right = []
     top_right = []
     bottom_left = []
@@ -61,4 +49,23 @@ def split_annotation(annotation_file, overlap=0, save_output=''):
             top_left.append(list(annotation))
     if save_output:
         for i, split in enumerate([top_left, bottom_left, top_right, bottom_right]):
-            pd.DataFrame(split).to_csv(save_output + '/' + img_name + '_{}.txt'.format(i), header=False, index=False)
+            pd.DataFrame(split).to_csv(save_output + '/' + title + '_{}.txt'.format(i+1), header=False, index=False)
+            
+def process_annotations(ann_path):
+    output = []
+    try:
+        annotations = pd.read_csv(ann_path, header = None)
+        annotations = annotations[annotations[5].isin([1, 2])].values
+    except:
+        return output
+    img = cv2.imread(ann_path.replace('annotations', 'images').replace('.txt', '.jpg'))
+    height_, width_ = img.shape[:2]
+    for annotation in annotations:
+        left, top, width, height, _, _, _, _ = annotation[:8]
+        x_center = np.round((left + width/2) / width_, 5)
+        y_center = np.round((top + height/2) / height_, 5)
+        width = np.round(width/width_, 5)
+        height = np.round(height/height_, 5)
+        output.append(' '.join(['0', str(x_center), str(y_center), str(width), str(height)]))
+    return output
+        

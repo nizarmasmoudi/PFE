@@ -1,7 +1,6 @@
-draft*
-test*
-/VisDrone2019
+docs
+models
+trash
 __pycache__
-*.jpg
-*.png
-Trained models
+test*
+draft*
