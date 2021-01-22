@@ -76,8 +76,14 @@ def fill_ignored_regions(img_path, inplace=True, save_output=None):
     except:
         annotations = []
     finally:
-        if len(annotations) >= 8:
-            for left, top, width, height, _, obj, _, _ in annotations[:8]:
+        if len(annotations) < 0:
+            pass
+        else:
+            for annotation in annotations:
+                if len(annotation) >= 8:
+                    left, top, width, height, _, obj, _, _ = annotation[:8]
+                else:
+                    continue
                 if obj == 0:
                     cv2.rectangle(img, (left, top), (left+width, top+height), (230, 230, 230), -1) 
     if inplace:
