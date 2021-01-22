@@ -69,3 +69,20 @@ def process_annotations(ann_path):
         output.append(' '.join(['0', str(x_center), str(y_center), str(width), str(height)]))
     return output
         
+def fill_ignored_regions(img_path, inplace=True, save_output=None):
+    img = cv2.imread(img_path)
+    try:
+        annotations = pd.read_csv(img_path.replace('images', 'annotations').replace('.jpg', '.txt'), header = None).values
+    except:
+        annotations = []
+    finally:
+        if len(annotations) < 0:
+            pass
+        else:
+            for left, top, width, height, _, obj, _, _ in annotations:
+                if obj == 0:
+                    cv2.rectangle(img, (left, top), (left+width, top+height), (230, 230, 230), -1) 
+    if inplace:
+        cv2.imwrite(img_path, img)
+    elif save_output:
+        cv2.imwrite(save_output + '/' + img_path.split('/')[-1], img)
