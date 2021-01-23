@@ -62,10 +62,10 @@ def process_annotations(ann_path):
     height_, width_ = img.shape[:2]
     for annotation in annotations:
         left, top, width, height, _, _, _, _ = annotation[:8]
-        x_center = np.round((left + width/2) / width_, 5)
-        y_center = np.round((top + height/2) / height_, 5)
-        width = np.round(width/width_, 5)
-        height = np.round(height/height_, 5)
+        x_center = (left + width/2) / width_
+        y_center = (top + height/2) / height_
+        width = width/width_
+        height = height/height_
         output.append(' '.join(['0', str(x_center), str(y_center), str(width), str(height)]))
     return output
         
