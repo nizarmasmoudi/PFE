@@ -2,11 +2,9 @@ import cv2
 import pandas as pd
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 def split_image(img_path, overlap=0, show=False, save_output=None):
-    img = plt.imread(img_path)
+    img = cv2.imread(img_path)
     height, width = img.shape[:2]
     title = img_path.split('/')[-1].split('.')[0]
     pieces = [
@@ -25,11 +23,11 @@ def split_image(img_path, overlap=0, show=False, save_output=None):
             cv2.waitKey(0)
     if save_output:
         for i, piece in enumerate(pieces):
-            plt.imsave(save_output + '/' + title + '_' + str(i+1) + '.jpg', piece)
+            cv2.imwrite(save_output + '/' + title + '_' + str(i+1) + '.jpg', piece)
 
 def split_annotation(ann_path, overlap=0, save_output=None):
     img_path = ann_path.replace('annotations', 'images').replace('txt', 'jpg')
-    height, width = plt.imread(img_path).shape[:2]
+    height, width = cv2.imread(img_path).shape[:2]
     title = img_path.split('/')[-1].split('.')[0]
     annotations = pd.read_csv(ann_path, header=None)
     annotations = annotations[annotations[5].isin([1, 2])]
@@ -60,7 +58,7 @@ def process_annotations(ann_path):
         annotations = annotations[annotations[5].isin([1, 2])].values
     except:
         return output
-    img = plt.imread(ann_path.replace('annotations', 'images').replace('.txt', '.jpg'))
+    img = cv2.imread(ann_path.replace('annotations', 'images').replace('.txt', '.jpg'))
     height_, width_ = img.shape[:2]
     for annotation in annotations:
         left, top, width, height, _, _, _, _ = annotation[:8]
@@ -71,9 +69,8 @@ def process_annotations(ann_path):
         output.append(' '.join(['0', str(x_center), str(y_center), str(width), str(height)]))
     return output
         
-        
 def fill_ignored_regions(img_path, inplace=True, save_output=None):
-    img = plt.imread(img_path)
+    img = cv2.imread(img_path)
     try:
         annotations = pd.read_csv(img_path.replace('images', 'annotations').replace('.jpg', '.txt'), header = None).values
     except:
@@ -88,31 +85,8 @@ def fill_ignored_regions(img_path, inplace=True, save_output=None):
                 else:
                     continue
                 if obj == 0:
-                    arr = img.copy()
-                    arr[left:left + width, top:top + height, :] = np.zeros((width, height, 3)) + 255
+                    cv2.rectangle(img, (left, top), (left+width, top+height), (230, 230, 230), -1) 
     if inplace:
-        plt.imsave(img_path, arr)
+        cv2.imwrite(img_path, img)
     elif save_output:
-        cv2.imwrite(save_output + '/' + img_path.split('/')[-1], arr)
-                    
-# def fill_ignored_regions(img_path, inplace=True, save_output=None):
-#     img = cv2.imread(img_path)
-#     try:
-#         annotations = pd.read_csv(img_path.replace('images', 'annotations').replace('.jpg', '.txt'), header = None).values
-#     except:
-#         annotations = []
-#     finally:
-#         if len(annotations) < 0:
-#             pass
-#         else:
-#             for annotation in annotations:
-#                 if len(annotation) >= 8:
-#                     left, top, width, height, _, obj, _, _ = annotation[:8]
-#                 else:
-#                     continue
-#                 if obj == 0:
-#                     cv2.rectangle(img, (left, top), (left+width, top+height), (230, 230, 230), -1) 
-#     if inplace:
-#         cv2.imwrite(img_path, img)
-#     elif save_output:
-#         cv2.imwrite(save_output + '/' + img_path.split('/')[-1], img)
+        cv2.imwrite(save_output + '/' + img_path.split('/')[-1], img)
