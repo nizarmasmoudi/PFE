@@ -1,4 +1,4 @@
-import cv2
+import matplotlib.pyplot as plt
 import os
 import argparse
 
@@ -32,7 +32,7 @@ def main():
         images = [args.folder + '/images/' + image_ for image_ in os.listdir(args.folder + '/images')]
         large = []
         for image in images:
-            img = cv2.imread(image)
+            img = plt.imread(image)
             annotations = image.replace('images', 'annotations').replace('.jpg', '.txt')
             if img.shape[0] > int(args.threshold) or img.shape[1] > int(args.threshold):
                 os.remove(image)
