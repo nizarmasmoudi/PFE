@@ -85,8 +85,14 @@ def fill_ignored_regions(img_path, inplace=True, save_output=None):
                 else:
                     continue
                 if obj == 0:
-                    cv2.rectangle(img, (left, top), (left+width, top+height), (230, 230, 230), -1) 
+                    img = add_noise(img, (left, top, width, height))
     if inplace:
         cv2.imwrite(img_path, img)
     elif save_output:
         cv2.imwrite(save_output + '/' + img_path.split('/')[-1], img)
+        
+def add_noise(img, coords):
+    left, top, width, height = coords
+    img_ = np.copy(img)
+    img_[top:top+height, left:left+width, :] = np.random.normal(0, 1, size = (height, width, 3))
+    return img_
