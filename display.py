@@ -22,7 +22,7 @@ def main():
             for left, top, width, height, _, obj, _, _ in annotations:
                 if obj in [1, 2]: 
                     cv2.rectangle(img, (left, top), (left+width, top+height), (0, 0, 255), 1)
-                elif obj == 0: 
+                elif obj == 0:
                     patch = np.ones((height, width, 3), dtype = np.uint8)*255 - 35
                     patch = cv2.addWeighted(img[top:top+height, left:left+width], 0.5, patch, 0.5, 1.0)
                     img[top:top+height, left:left+width] = patch

@@ -1,6 +1,5 @@
 import cv2
 import pandas as pd
-import os
 import numpy as np
 
 def split_image(img_path, overlap=0, show=False, save_output=None):

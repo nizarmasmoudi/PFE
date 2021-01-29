@@ -26,8 +26,11 @@ def main():
     with open(args.output + '/valid.txt', 'w+') as out:
         for image in os.listdir(args.dataset + '/validation/images'):
             out.write(args.output +  '/obj/' + image + '\n')
+    with open(args.output + '/test.txt', 'w+') as out:
+        for image in os.listdir(args.dataset + '/test/images'):
+            out.write(args.output +  '/obj/' + image + '\n')
     # Copying images / Processing annotations
-    for subset in ['/train', '/validation']:
+    for subset in ['/train', '/validation', '/test']:
         images = [args.dataset + subset + '/images/' + image for image in os.listdir(args.dataset + subset + '/images')]
         for i, img_path in enumerate(images):
             shutil.copy(img_path, args.output + '/obj')
