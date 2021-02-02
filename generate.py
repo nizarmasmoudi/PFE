@@ -2,6 +2,7 @@ import argparse
 import os
 from utils.preprocessing import process_annotations
 import shutil
+from tqdm import tqdm
 
 def main():
     description = 'Process annotations to fit a certain format'
@@ -32,7 +33,8 @@ def main():
     # Copying images / Processing annotations
     for subset in ['/train', '/validation', '/test']:
         images = [args.dataset + subset + '/images/' + image for image in os.listdir(args.dataset + subset + '/images')]
-        for i, img_path in enumerate(images):
+        for i in tqdm(range(len(images)), desc='Copying [{}] files'.format(subset.strip('/')), unit=' file'):
+            img_path = images[i]
             shutil.copy(img_path, args.output + '/obj')
             ann_path = img_path.replace('images', 'annotations').replace('.jpg', '.txt')
             output = process_annotations(ann_path)
@@ -42,9 +44,6 @@ def main():
             output = [line + '\n' for line in output]
             with open(args.output + '/obj/' + ann_path.split('/')[-1], 'w+') as out:
                 out.writelines(output)
-            print('Making dataset ... ({}%)'.format(i*100//len(images)), end='\r')
-    print('Done' + ' '*22)
-    
 
 if __name__ == '__main__':
     main()

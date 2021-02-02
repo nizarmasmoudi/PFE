@@ -64,7 +64,7 @@ VisDrone2019
         -n, --negatives       Delete negative samples
         -l, --large           Delete large images
         -t THRESHOLD, --threshold THRESHOLD
-                                Threshold of width/heigth for deletion
+                                Threshold of width/height for deletion
         -g, --log             Log deleted files
     ```
 - `display.py` (displays image with bounding boxes)
@@ -106,10 +106,3 @@ data
 ```
 
 *Note : All values are relative to the width and height of the image (between 0 and 1)*
-
-Another alternative is to train using [Tensorflow](https://github.com/SoloSynth1/tensorflow-yolov4). It's not advised. However, it might come handy later when deploying the model (Detect people using tensorflow implemented YOLOv4 and Darknet generated weights file).
-
-In case of need, here's the annotation format required:
-```
-    <img_path> <x_min>,<y_min>,<x_max>,<y_max>,<object_category> ...
-```

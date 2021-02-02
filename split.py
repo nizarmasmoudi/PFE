@@ -1,6 +1,7 @@
 import argparse
 import os
 from utils.preprocessing import split_annotation, split_image
+from tqdm import tqdm
 
 def main():
     description = 'Split images and their corresponding annotations into 4 equally shaped pieces'
@@ -16,13 +17,11 @@ def main():
     if not os.path.exists(args.output + '/images'): os.makedirs(args.output + '/images')
     if not os.path.exists(args.output + '/annotations'): os.makedirs(args.output + '/annotations')
     
-    for i, img_path in enumerate(images):
+    for i in tqdm(range(len(images)), desc='splitting', unit=' image'):
+        img_path = images[i]
         ann_path = img_path.replace('images', 'annotations').replace('.jpg', '.txt')
         split_image(img_path, int(args.overlap), save_output = args.output + '/images')
         split_annotation(ann_path, overlap = int(args.overlap), save_output = args.output + '/annotations')
-        print('Splitting ... ({}%)'.format(i*100//len(images)), end = '\r')
-    print('Done' + ' '*20)
-    
     
 if __name__ == '__main__':
     main()

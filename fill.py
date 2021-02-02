@@ -1,6 +1,7 @@
 import argparse
 from utils.preprocessing import fill_ignored_regions
 import os
+from tqdm import tqdm
 
 def main():
     description = 'Fill ignored regions with patches'
@@ -13,11 +14,9 @@ def main():
     args = parser.parse_args()
     
     images = [args.folder + '/images/' + image_ for image_ in os.listdir(args.folder + '/images')]
-    for i, img_path in enumerate(images):
+    for i in tqdm(range(len(images)), desc='Filling', unit=' image'):
+        img_path = images[i]
         fill_ignored_regions(img_path, inplace=args.inplace, save_output=args.output)
-        print('Filling ignored regions ... ({}%)'.format(i*100//len(images)), end='\r')
-    print('Done' + ' '*30)
-
 
 if __name__ == '__main__':
     main()

@@ -2,6 +2,7 @@ import argparse
 import cv2
 import os
 import pandas as pd
+from tqdm import tqdm
 
 def main():
     description = 'Draw bounding boxes on a given set of images'
@@ -13,7 +14,8 @@ def main():
     
     images = [args.folder + '/images/' + image_ for image_ in os.listdir(args.folder + '/images')]
     
-    for i, image in enumerate(images):
+    for i in tqdm(range(len(images)), desc='Annotating', unit=' image'):
+        image = images[i]
         img = cv2.imread(image)
         try:
             annotations = pd.read_csv(image.replace('images', 'annotations').replace('.jpg', '.txt'), header = None).values
@@ -26,8 +28,6 @@ def main():
                 for left, top, width, height, _, obj, _, _ in annotations:
                     if obj in [1, 2]: cv2.rectangle(img, (left, top), (left+width, top+height), (0, 0, 255), 1)
             cv2.imwrite(args.output + '/' + image.split('/')[-1], img)
-        print('Drawing images ... ({}%)'.format(i*100//len(images)), end='\r')
-    print('Done' + ' '*22)
 
 if __name__ == '__main__':
     main()
