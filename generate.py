@@ -1,7 +1,6 @@
 import argparse
 import os
 
-from numpy.lib.npyio import save
 from utils import env
 from dataset.image import Image
 from tqdm import tqdm
