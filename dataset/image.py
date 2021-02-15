@@ -3,8 +3,6 @@ import numpy as np
 import cv2
 import os
 
-from typing_extensions import Annotated
-
 class Image:
     def __init__(self, img_path):
         if os.path.exists(img_path):
