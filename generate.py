@@ -2,7 +2,7 @@ import argparse
 import os
 
 from utils import env
-from dataset.image import Image
+from dataset.preprocessing import Image
 from tqdm import tqdm
 
 def fill_ignored_regions(image):
