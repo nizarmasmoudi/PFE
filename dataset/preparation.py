@@ -4,7 +4,7 @@ import cv2 as cv
 import os
 
 class Image:
-    def __init__(self, img_path):
+    def __init__(self, img_path, raw=1):
         self.img_path = img_path
         if not os.path.exists(self.img_path):
             raise FileNotFoundError(self.img_path)
@@ -19,7 +19,7 @@ class Image:
             pd.read_csv(
                 self.ann_path,
                 header=None,
-                usecols=[0, 1, 2, 3, 5],
+                usecols=[0, 1, 2, 3, 5 if raw else 4],
                 names=['left', 'top', 'width', 'height', 'object_category']
             )[lambda df: df['object_category'].isin([0, 1, 2])]
             .dropna(axis = 'columns')
