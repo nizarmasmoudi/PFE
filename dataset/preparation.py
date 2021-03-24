@@ -127,7 +127,7 @@ class Image:
         annotations['object_category'] = 0
         annotations = annotations.loc[:, ['object_category', 'x_center', 'y_center', 'width', 'height']]
         if save_output:
-            annotations.to_csv(os.path.join(save_output, os.path.basename(self.ann_path)), sep=' ')
+            annotations.to_csv(os.path.join(save_output, os.path.basename(self.ann_path)), sep=' ', header=False, index=False)
         else:
             return annotations
           
