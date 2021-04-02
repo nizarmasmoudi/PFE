@@ -1,43 +1,33 @@
-from numpy.lib.npyio import save
 import pandas as pd
 import numpy as np
 import cv2 as cv
 import os
 
-class Image:
-    def __init__(self, img_path, raw=1):
-        self.img_path = img_path
-        if not os.path.exists(self.img_path):
-            raise FileNotFoundError(self.img_path)
-        self.ann_path = self.img_path.replace('images', 'annotations').replace('.jpg', '.txt')
-        if not os.path.exists(self.ann_path):
-            raise FileNotFoundError(self.ann_path)
-        self.title = os.path.basename(self.img_path)
-        self.mat = cv.imread(self.img_path)
-        self.height = self.mat.shape[0]
-        self.width = self.mat.shape[1]
-        self.annotations = (
-            pd.read_csv(
-                self.ann_path,
-                header=None,
-                usecols=[0, 1, 2, 3, 5 if raw else 4],
-                names=['left', 'top', 'width', 'height', 'object_category']
-            )[lambda df: df['object_category'].isin([0, 1, 2])]
-            .dropna(axis = 'columns')
-        )
-    
-    def display(self, bbox=True):
-        '''Display image with OpenCV.
+def read_image(img_path):
+    ann_path = img_path.replace('images', 'annotations').replace('.jpg', '.txt')
+    title = os.path.basename(img_path)
+    mat = cv.imread(img_path)    
+    annotation = pd.read_csv(ann_path, header=None, names=['bbox_left', 'bbox_top', 'bbox_width', 'bbox_height', 'score', 'object_category', 'truncation', 'occlusion'])
+    annotation = annotation.loc[annotation['object_category'].isin([0, 1, 2])]
+    return Image(mat, annotation, title)
 
-        Args:
-            bbox (bool, optional): Display bounding boxes and ignored annotations. Defaults to True.
-        '''
+class Image:
+    def __init__(self, mat, annotation, title=''):
+        self.mat = mat
+        self.annotation = annotation
+        self.height = mat.shape[0]
+        self.width = mat.shape[1]
+        self.title = title
+        
+    def display(self, bbox=True):
         if bbox:
             mat_ = self.mat.copy()
-            for left, top, width, height, obj in self.annotations.values:
-                if obj in [1, 2]:
+            for left, top, width, height, obj in self.annotation.loc[:, ['bbox_left', 'bbox_top', 'bbox_width', 'bbox_height', 'object_category']].values:
+                if obj == 1:
                     cv.rectangle(mat_, (left, top), (left+width, top+height), (0, 255, 0), 1)
                     # cv.putText(mat_, str(height), (left, top - 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
+                elif obj == 2:
+                    cv.rectangle(mat_, (left, top), (left+width, top+height), (0, 0, 255), 1)
                 elif obj == 0:
                     cv.rectangle(mat_, (left, top), (left+width, top+height), (255, 255, 255), 1)
                     for wp in range(left, left + width, 5):
@@ -49,105 +39,87 @@ class Image:
         else:
             cv.imshow(self.title, self.mat)
             cv.waitKey(0)
-            
+    
     def patch(self):
-        '''Fill ignored regions with white noise.
-        '''
-        regions = self.annotations.loc[self.annotations['object_category'] == 0, ['left', 'top', 'width', 'height']]
+        regions = self.annotation.loc[self.annotation['object_category'] == 0, ['bbox_left', 'bbox_top', 'bbox_width', 'bbox_height']]
         if len(regions) > 0:
             mat_ = np.copy(self.mat)
             for left, top, width, height in regions.values:
-                mat_[top:top+height, left:left+width, ...] = np.random.normal(0, 1, size = (height, width, 3))
+                mat_[top:top + height, left:left + width, ...] = np.random.normal(0, 1, size = (height, width, 3))
             self.mat = mat_
             
-    def pad(self, target):
-        '''Pad image with zeros to fit target shape. Padding doesn't affect annotations.
-
-        Args:
-            target (tuple): Target shape.
-        '''
-        height, width = target
-        self.mat = np.pad(self.mat, ((0, max(height - self.height, 0)), (0, max(width - self.width, 0)), (0, 0)), 'constant', constant_values=0)
-        
-    def split(self, save_images=None, save_annotations=None, target=(736, 736)):
-        '''Split image into 4 equal splits. Annotations will be split as well with dimensions taken into consideration.
-
-        Args:
-            save_images (string, optional): Path to parent directory where split images will be saved. Defaults to None. If not specified split images will be returned.
-            save_annotations (string, optional): Path to parent directory where split annotations will be saved. Defaults to None. If not specified split annotations will be returned.
-            target (tuple, optional): Target shape of split images. Defaults to (736, 736).
-
-        Returns:
-            tuple: Annotations and matrices of split images
-        '''
-        images = [
-            self.mat[:self.height//2, :self.width//2, :], # Top left 
-            self.mat[:self.height//2, self.width//2:, :], # Top right
-            self.mat[self.height//2:, :self.width//2, :], # Bottom left
-            self.mat[self.height//2:, self.width//2:, :], # Bottom right
-        ]
-        #! This is the only changement
-        images = [np.pad(image, ((0, max(target[0] - self.height//2, 0)), (0, max(target[1] - self.width//2, 0)), (0, 0)), 'constant', constant_values=0) for image in images]
-        
-        map_ = {'top_left': [], 'top_right': [], 'bottom_left': [], 'bottom_right': []}
-        objects = self.annotations.loc[self.annotations['object_category'] != 0]
-        for left, top, width, height, obj_cat in objects.values:
-            y_center, x_center = top + height//2, left + width//2
-            if y_center - height//4 < self.height//2 and x_center - width//4 < self.width//2:
-                map_['top_left'].append([left, top, min(width, self.width//2 - left), min(height, self.height//2 - top), obj_cat])
-            if y_center - height//4 < self.height//2 and x_center + width//4 >= self.width//2:
-                map_['top_right'].append([max(left, self.width//2) - (self.width//2), top, width, min(height, self.height//2 - top), obj_cat])
-            if y_center + height//4 >= self.height//2 and x_center - width//4 < self.width//2:
-                map_['bottom_left'].append([left, max(top, self.height//2) - (self.height//2), min(width, self.width//2 - left), height - max(0, self.height//2 - top), obj_cat])
-            if y_center + height//4 >= self.height//2 and x_center + width//4 >= self.width//2:
-                map_['bottom_right'].append([max(left, self.width//2) - (self.width//2), max(top, self.height//2) - (self.height//2), width, height - max(0, self.height//2 - top), obj_cat])
+    def save(self, output_path, ann_sep=' '):
+        cv.imwrite(os.path.join(output_path, 'images', self.title), self.mat)
+        self.annotation.to_csv(os.path.join(output_path, 'annotations', self.title.replace('.jpg', '.txt')), header=False, index=False, sep=ann_sep)
             
-        map_['top_left'] = pd.DataFrame(map_['top_left'])
-        map_['top_right'] = pd.DataFrame(map_['top_right'])
-        map_['bottom_left'] = pd.DataFrame(map_['bottom_left'])
-        map_['bottom_right'] = pd.DataFrame(map_['bottom_right'])
+      
+    def pad(self, target=(736, 736)):
+        pad_height, pad_width = target
+        self.mat = np.pad(self.mat, ((0, max(pad_height - self.height, 0)), (0, max(pad_width - self.width, 0)), (0, 0)), 'constant', constant_values=0)
+        self.height, self.width = self.mat.shape[0], self.mat.shape[1]
+    
+    def crop(self, loc='upper left', size=(736, 736)):
+        if loc not in ['upper left', 'lower left', 'upper right', 'lower right']:
+            raise Exception('Cannot understand location of crop.')
         
-        if save_images:
-            for i, image in enumerate(images):
-                cv.imwrite(os.path.join(save_images, self.title.replace('.', '_{}.'.format(i + 1))), image)
+        crop_height, crop_width = size
+        if crop_height == self.height and crop_width == self.width:
+            print('Image already fits size', size)
+            return
+        
         else:
-            return images
-        if save_annotations:
-            for i, loc in enumerate(map_.keys()):
-                map_[loc].to_csv(os.path.join(save_annotations, self.title.replace('.jpg', '_{}.txt'.format(i + 1))), header=False, index=False)
+            if loc == 'upper left':
+                sub_mat = self.mat[:crop_height, :crop_width, :].copy()
+                sub_annotation = self.annotation.loc[(
+                    ((self.annotation['bbox_top'] + .5*self.annotation['bbox_height']) < crop_height) & ((self.annotation['bbox_left'] + .5*self.annotation['bbox_width']) < crop_width)
+                )].copy()
+            elif loc == 'upper right':
+                sub_mat = self.mat[:crop_height, self.width - crop_width:, :].copy()
+                sub_annotation = self.annotation.loc[(
+                    ((self.annotation['bbox_top'] + .5*self.annotation['bbox_height']) < crop_height) & ((self.annotation['bbox_left'] + .5*self.annotation['bbox_width']) > self.width - crop_width)
+                )].copy()
+                sub_annotation.loc[:, 'bbox_left'] = sub_annotation.loc[:, 'bbox_left'] - (self.width - crop_width)
+            elif loc == 'lower left':
+                sub_mat = self.mat[self.height - crop_height:, :crop_width, :].copy()
+                sub_annotation = self.annotation.loc[(
+                    ((self.annotation['bbox_top'] + .5*self.annotation['bbox_height']) > self.height - crop_height) & ((self.annotation['bbox_left'] + .5*self.annotation['bbox_width']) < crop_width)
+                )].copy()
+                sub_annotation.loc[:, 'bbox_top'] = sub_annotation.loc[:, 'bbox_top'] - (self.height - crop_height)
+            elif loc == 'lower right':
+                sub_mat = self.mat[self.height - crop_height:, self.width - crop_width:, :].copy()
+                sub_annotation = self.annotation.loc[(
+                    ((self.annotation['bbox_top'] + .5*self.annotation['bbox_height']) > self.height - crop_height) & ((self.annotation['bbox_left'] + .5*self.annotation['bbox_width']) > self.width - crop_width)
+                )].copy()
+                sub_annotation.loc[:, 'bbox_top'] = sub_annotation.loc[:, 'bbox_top'] - (self.height - crop_height)
+                sub_annotation.loc[:, 'bbox_left'] = sub_annotation.loc[:, 'bbox_left'] - (self.width - crop_width)
+
+            sub_annotation = sub_annotation.reset_index(drop=True)
+            if len(sub_annotation) > 0:
+                for i in range(len(sub_annotation)):
+                    left, top, width, height = sub_annotation.loc[i, ['bbox_left', 'bbox_top', 'bbox_width', 'bbox_height']]
+                    if left < 0:
+                        width -= abs(left)
+                        left = 0
+                    if top < 0:
+                        height -= abs(top)
+                        top = 0
+                    sub_annotation.loc[i, ['bbox_left', 'bbox_top', 'bbox_width', 'bbox_height']] = [left, top, width, height]
+            
+            return Image(sub_mat, sub_annotation, self.title.replace('.jpg', '_{}.jpg'.format(['upper left', 'lower left', 'upper right', 'lower right'].index(loc))))
+    
+    def filter(self, occlusion='heavy'):
+        occlusion = 2*(occlusion == 'heavy') + (occlusion == 'partial')
+        self.annotation = self.annotation.loc[self.annotation['occlusion'] < occlusion]
+        
+    def parse_annotations(self, inplace=False):
+        parsed = pd.DataFrame(columns=['object_class', 'x_center', 'y_center', 'width', 'height'])
+        parsed['object_class'] = self.annotation['object_category'] - 1
+        parsed['x_center'] = (self.annotation['bbox_left'] + self.annotation['bbox_width']/2)/self.width
+        parsed['y_center'] = (self.annotation['bbox_top'] + self.annotation['bbox_height']/2)/self.height
+        parsed['width'] = self.annotation['bbox_width']/self.width
+        parsed['height'] = self.annotation['bbox_height']/self.height
+        parsed = parsed.loc[parsed['object_class'] >= 0]
+        if inplace:
+            self.annotation = parsed
         else:
-            return map_, images
-      
-    def parse_annotations(self, save_output=None):
-        annotations = self.annotations.copy().loc[self.annotations['object_category'] > 0, :]
-        annotations['x_center'] = (annotations['left'] + annotations['width']/2)/self.width
-        annotations['y_center'] = (annotations['top'] + annotations['height']/2)/self.height
-        annotations['width'] = annotations['width']/self.width
-        annotations['height'] = annotations['height']/self.height
-        annotations['object_category'] = 0
-        annotations = annotations.loc[:, ['object_category', 'x_center', 'y_center', 'width', 'height']]
-        if save_output:
-            annotations.to_csv(os.path.join(save_output, os.path.basename(self.ann_path)), sep=' ', header=False, index=False)
-        else:
-            return annotations
-          
-      
-    # def parse_annotations(self, save_output=None):
-    #     if len(self.annotations) > 0:
-    #         parsed = []
-    #         for left, top, width, height, obj_cat in self.annotations.values:
-    #             x_center = (left + width/2) / self.width
-    #             y_center = (top + height/2) / self.height
-    #             width = width/self.width
-    #             height = height/self.height
-    #             parsed.append('0 {} {} {} {}\n'.format(x_center, y_center, width, height))
-    #         if save_output:
-    #             with open(os.path.join(save_output, self.title.replace('.jpg', '.txt')), 'w+') as out:
-    #                 out.writelines(parsed)
-    #         else:
-    #             return parsed
-    #     else:
-    #         if save_output:
-    #             open(os.path.join(save_output, self.title.replace('.jpg', '.txt')), 'w+').close()
-    #         else:
-    #             return []
+            return parsed
