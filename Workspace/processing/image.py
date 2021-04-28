@@ -103,15 +103,20 @@ class Image():
                     sub_annotation.loc[i, ['bbox_left', 'bbox_top', 'bbox_width', 'bbox_height']] = [left, top, width, height]
             
             return Image(sub_mat, sub_annotation, self.title.replace('.jpg', '_{}.jpg'.format(['upper left', 'lower left', 'upper right', 'lower right'].index(loc))))
-    def parse_annotations(self, inplace: bool = False) -> pd.DataFrame:
+    def parse_annotations(self, inplace: bool = False, n_classes: int = 1) -> pd.DataFrame:
         parsed = pd.DataFrame(columns=['object_class', 'x_center', 'y_center', 'width', 'height'])
-        parsed = parsed[parsed['object_class'].isin([1, 2])]
-        parsed['object_class'] = 0
+        parsed['object_class'] = self.annotation['object_category']
         parsed['x_center'] = (self.annotation['bbox_left'] + self.annotation['bbox_width']/2)/self.width
         parsed['y_center'] = (self.annotation['bbox_top'] + self.annotation['bbox_height']/2)/self.height
         parsed['width'] = self.annotation['bbox_width']/self.width
         parsed['height'] = self.annotation['bbox_height']/self.height
-        if inplace:
-            self.annotation = parsed
+        parsed = parsed[parsed['object_class'].isin([1, 2])]
+        
+        if n_classes == 2:
+            parsed['object_class'] -= 1
         else:
-            return parsed
+            parsed['object_class'] = 0
+        if inplace:
+            self.annotation = parsed[['object_class', 'x_center', 'y_center', 'width', 'height']]
+        else:
+            return parsed[['object_class', 'x_center', 'y_center', 'width', 'height']]

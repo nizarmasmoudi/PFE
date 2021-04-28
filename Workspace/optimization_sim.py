@@ -33,7 +33,7 @@ opt_t = time() - opt_t0
 
 # Optimization (Genetic algorithm)
 ga_t0 = time()
-alg = GA(population_size = 20, mutation_rate = .05, crossover_rate = .8)
+alg = GA(population_size = 21, mutation_rate = .05, elitism=True)
 history = alg.fit(clusters, n_generations = 50, alpha = ALPHA, verbose = False)
 ga_route = alg.population[np.argmin([cost_func(ind.xyc, alpha = 0) for ind in alg.population])]
 ga_t = time() - ga_t0
